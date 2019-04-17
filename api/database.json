@@ -1,8 +1,8 @@
 {
   "dev": {
     "driver": "mysql",
-    "user": "goldstar",
-    "password": "password",
+    "user": "root",
+    "password": "",
     "database": "goldstar"
   }
 }
