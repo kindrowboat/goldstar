@@ -1,5 +1,6 @@
 require('dotenv').config();
 const PeopleController = require('./app/controllers/PeopleController.js');
+const DueDatesController = require('./app/controllers/DueDatesController.js');
 const express = require('express');
 const db = require('./app/lib/db');
 
@@ -14,6 +15,7 @@ if (process.env.NODE_ENV === 'test') {
 
 app.use(express.json({type: '*/*'}));
 app.use('/people', PeopleController);
+app.use('/due_dates', DueDatesController);
 
 app.get('/', (req, res) => res.send('Hello World!'));
 
