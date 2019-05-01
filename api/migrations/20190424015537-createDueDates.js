@@ -14,8 +14,15 @@ exports.setup = function(options, seedLink) {
 
 exports.up = function(db, callback) {
   db.createTable('due_dates', {
-    id: { type: 'int', primaryKey: true, autoIncrement: true },
-    date: 'date',
+    id: {
+      type: 'int',
+      primaryKey: true,
+      autoIncrement: true
+    },
+    date: {
+      type: 'date',
+      notNull: true
+    },
   }, callback);
 };
 

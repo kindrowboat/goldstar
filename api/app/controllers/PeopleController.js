@@ -3,12 +3,25 @@ const router = express.Router();
 const db = require('../lib/db');
 
 router.post('/', (req, res) => {
-  db.query('INSERT INTO people SET ?', { name: req.body.name, initials: req.body.initials }, (error, results, fields) => {
-    res.send({
-      id: results.insertId,
-      name: req.body.name,
-      initials: req.body.initials
-    });
+  const name = req.body.name;
+  const initials = req.body.initials;
+  const errors = validateParams(req.body);
+
+  if(Object.keys(errors).length > 0) {
+    res.send({errors: errors}, 400);
+    return;
+  }
+
+  db.query('INSERT INTO people SET ?', { name: name, initials: initials }, (error, results, fields) => {
+    if (error) {
+      res.send({}, 500);
+    } else {
+      res.send({
+        id: results.insertId,
+        name: name,
+        initials: req.body.initials
+      });
+    }
   });
 });
 
@@ -29,7 +42,14 @@ router.get('/', (req, res) => {
 });
 
 router.put('/:id', (req, res) => {
-  db.query('UPDATE people SET ? WHERE id=?', [{ name: req.body.name, initials: req.body.initials}, req.params.id], (_error, results, _fields) => {
+  const errors = validateParams(req.body);
+
+  if(Object.keys(errors).length > 0) {
+    res.send({errors: errors}, 400);
+    return;
+  }
+
+  db.query('UPDATE people SET ? WHERE id=?', [{ name: req.body.name, initials: req.body.initials}, req.params.id], (error, results, _fields) => {
     if (results.affectedRows === 1) {
       res.send({
         id: parseInt(req.params.id),
@@ -51,5 +71,21 @@ router.delete('/:id', (req, res) => {
     }
   });
 });
+
+const validateParams = (params) => {
+  const name = params.name;
+  const initials = params.initials;
+  const errors = {};
+
+  if(!name) {
+    errors['name'] = 'must be present';
+  }
+
+  if(!initials) {
+    errors['initials'] = 'must be present';
+  }
+
+  return errors;
+};
 
 module.exports = router;
