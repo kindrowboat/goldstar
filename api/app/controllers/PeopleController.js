@@ -8,7 +8,7 @@ router.post('/', (req, res) => {
   const errors = validateParams(req.body);
 
   if(Object.keys(errors).length > 0) {
-    res.send({errors: errors}, 400);
+    res.status(400).send({errors: errors});
     return;
   }
 
@@ -28,7 +28,7 @@ router.post('/', (req, res) => {
 router.get('/:id', (req, res) => {
   db.query('SELECT * FROM people WHERE id=?', [req.params.id], (_error, results, _fields) => {
     if (results.length === 0) {
-      res.send({}, 404)
+      res.status(404).send({});
     } else {
       res.send(results[0]);
     }
@@ -45,7 +45,7 @@ router.put('/:id', (req, res) => {
   const errors = validateParams(req.body);
 
   if(Object.keys(errors).length > 0) {
-    res.send({errors: errors}, 400);
+    res.status(400).send({errors: errors});
     return;
   }
 
@@ -57,7 +57,7 @@ router.put('/:id', (req, res) => {
         initials: req.body.initials
       });
     } else {
-      res.send({}, 404)
+      res.status(404).send({});
     }
   })
 });
@@ -65,9 +65,9 @@ router.put('/:id', (req, res) => {
 router.delete('/:id', (req, res) => {
   db.query('DELETE FROM people WHERE id=?', [req.params.id], (_error, results, _fields) => {
     if (results.affectedRows === 1) {
-      res.send(null, 204);
+      res.status(204).send(null);
     } else {
-      res.send(null, 404)
+      res.status(404).send(null);
     }
   });
 });

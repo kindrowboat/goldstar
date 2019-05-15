@@ -1,25 +1,15 @@
 process.env.NODE_ENV = 'test';
 
+require('../spec_helper');
 let chai = require('chai');
 let chaiHttp = require('chai-http');
 let app = require('../../index');
-let DatabaseCleaner = require('database-cleaner');
-let databaseCleaner = new DatabaseCleaner('mysql');
 
 chai.should();
-
-let db = require('../../app/lib/db');
 
 chai.use(chaiHttp);
 
 describe('People', () => {
-  beforeEach((done) => {
-    databaseCleaner.clean(db, done);
-  });
-
-  after( () => {
-    app.stop();
-  });
 
   describe('GET /people', () => {
     it('should GET all the people', (done) => {

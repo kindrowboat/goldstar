@@ -16,7 +16,7 @@ router.post('/', (req, res) => {
 router.get('/:id', (req, res) => {
   db.query('SELECT * FROM due_dates WHERE id=?', [req.params.id], (_error, results, _fields) => {
     if (results.length === 0) {
-      res.send({}, 404)
+      res.status(404).send({});
     } else {
       date = results[0];
       date.date = dateFormat(date.date, 'yyyy-mm-dd');
@@ -44,7 +44,7 @@ router.put('/:id', (req, res) => {
         date: req.body.date
       });
     } else {
-      res.send({}, 404)
+      res.status(404).send({});
     }
   })
 });
@@ -52,9 +52,9 @@ router.put('/:id', (req, res) => {
 router.delete('/:id', (req, res) => {
   db.query('DELETE FROM due_dates WHERE id=?', [req.params.id], (_error, results, _fields) => {
     if (results.affectedRows === 1) {
-      res.send(null, 204);
+      res.status(204).send(null);
     } else {
-      res.send(null, 404)
+      res.status(404).send(null);
     }
   });
 });

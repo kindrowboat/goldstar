@@ -1,26 +1,16 @@
 process.env.NODE_ENV = 'test';
 
+require('../spec_helper');
 let chai = require('chai');
 let chaiHttp = require('chai-http');
 let app = require('../../index');
 const factories = require('../support/factories');
-let DatabaseCleaner = require('database-cleaner');
-let databaseCleaner = new DatabaseCleaner('mysql');
 
 chai.should();
-
-let db = require('../../app/lib/db');
 
 chai.use(chaiHttp);
 
 describe('Assignments', () => {
-  beforeEach((done) => {
-    databaseCleaner.clean(db, done);
-  });
-
-  after(() => {
-    app.stop();
-  });
 
   describe('GET /assignments', () => {
     it('should GET all the assignments', (done) => {
@@ -52,5 +42,39 @@ describe('Assignments', () => {
       getResponse.body.should.be.an('array');
       getResponse.body.should.deep.equal([{"id": newAssignmentId, "due_date_id": dueDate.id, "from_person_id": fromPerson.id, "to_person_id": toPerson.id, "complete": true}]);
     });
-  })
+  });
+
+  describe('PUT /assignments', () => {
+    let newAssignmentId;
+    it('should POST an assignments', async () => {
+      const fromPerson = await factories.createPerson({name: 'Foo Bar', initials: 'FB'});
+      const firstToPerson = await factories.createPerson({name: 'To Person', initials: 'TP'});
+      const secondToPerson = await factories.createPerson({name: 'The Real To Person', initials: 'TRTP'});
+      const dueDate = await factories.createDueDate({date: '2017-05-15'});
+
+      const response = await chai.request(app).post('/assignments').send({"due_date_id": dueDate.id, "from_person_id": fromPerson.id, "to_person_id": firstToPerson.id, "complete": true});
+      response.should.have.status(200);
+      response.body.should.be.an('object');
+      newAssignmentId = response.body['id'];
+      response.body.should.deep.equal({"id": newAssignmentId, "due_date_id": dueDate.id, "from_person_id": fromPerson.id, "to_person_id": firstToPerson.id, "complete": true});
+
+      const putResponse = await chai.request(app).put(`/assignments/${newAssignmentId}`).send({"due_date_id": dueDate.id, "from_person_id": fromPerson.id, "to_person_id": secondToPerson.id, "complete": true});
+      putResponse.should.have.status(200);
+      putResponse.body.should.be.an('object');
+      putResponse.body.should.deep.equal({"id": newAssignmentId, "due_date_id": dueDate.id, "from_person_id": fromPerson.id, "to_person_id": secondToPerson.id, "complete": true});
+
+
+      const getResponse = await chai.request(app).get('/assignments');
+      getResponse.should.have.status(200);
+      getResponse.body.should.be.an('array');
+      getResponse.body.should.deep.equal([{"id": newAssignmentId, "due_date_id": dueDate.id, "from_person_id": fromPerson.id, "to_person_id": secondToPerson.id, "complete": true}]);
+    });
+
+    context('when querying with invalid assignment id', () => {
+      it ('should return a 404', async () => {
+        const putResponse = await chai.request(app).put(`/assignments/-1`).send({"due_date_id": '', "from_person_id": 1, "to_person_id": 1, "complete": true});
+        putResponse.should.have.status(404);
+      })
+    })
+  });
 });
