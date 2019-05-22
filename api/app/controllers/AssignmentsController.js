@@ -4,8 +4,19 @@ const db = require('../lib/db');
 
 router.get('/', (req, res) => {
   db.query('SELECT * FROM assignments', (_error, results, _fields) => {
-    results.forEach(result => result.complete = !!result.complete);
+    results.forEach(result => normalizeAssignment(result));
     res.send(results);
+  });
+});
+
+router.get('/:id', (req, res) => {
+  db.query('SELECT * FROM assignments WHERE id=?', [req.params.id], (_error, results, _fields) => {
+    if (results.length === 0) {
+      res.status(404).send({});
+    } else {
+      results.forEach(result => normalizeAssignment(result));
+      res.send(results[0]);
+    }
   });
 });
 
@@ -55,5 +66,19 @@ router.put('/:assignment_id', (req, res) => {
     }
   });
 });
+
+router.delete('/:id', (req, res) => {
+  db.query('DELETE FROM assignments WHERE id=?', [req.params.id], (_error, results, _fields) => {
+    if (results.affectedRows === 1) {
+      res.status(204).send(null);
+    } else {
+      res.status(404).send(null);
+    }
+  });
+});
+
+function normalizeAssignment(assignment) {
+  assignment.complete = !!assignment.complete
+}
 
 module.exports = router;
