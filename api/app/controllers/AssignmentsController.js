@@ -84,22 +84,30 @@ function normalizeAssignment(assignment) {
 router.post('/auto_assign', (req, res) => {
   db.query('SELECT * FROM People', (_error, results, _fields) => {
     const people = results;
-
-    // for each people, get a list of remaining people, subtract people already given feedback to
-    const all_people_ids = people.map(peep => peep.id);
     const assignments = [];
+    // for each people, get a list of remaining people, subtract people already given feedback to
+    let remainingRecipients = people.map(peep => peep.id);
+    const assignmentQueryPromises = [];
     people.forEach(person => {
-      db.query('SELECT * FROM People JOIN Assignments ON People.id == Assignment.from_person_id'
-      eligiblePeople = all_people_ids.filter(id => id !== person.id && !already_assigned.includes(id))
+      // get all people they've given feedback to
+      assignmentQueryPromises.push(
+        new Promise(resolve => {
+          db.query('SELECT * FROM People JOIN Assignments ON People.id = Assignments.from_person_id WHERE People.id = ?', [person.id], (_error, results, _feilds) => {
+            const alreadyAssigned = results;
+            // filter out people they've given feedback to from the list of all people
+            const eligiblePeople = remainingRecipients.filter(id => id !== person.id && !alreadyAssigned.includes(id));
+            const assignment = eligiblePeople[0];
+            remainingRecipients = remainingRecipients.filter(id => id != assignment);
+            assignments.push({to_person_id: assignment || null});
+            resolve();
+          });
+        })
+      );
     });
 
-
-    // for each people, select the first one on the list, add to 'selected list'
-    // compare the to_person to selected list, if it already exists, move to next one, and add to 'selected list', and repeat
-    const assignments = people.map(peep => ({
-      to_person_id: 1
-    }));
-    res.status(200).send(assignments);
+    Promise.all(assignmentQueryPromises).then(() => {
+      res.status(200).send(assignments);
+    });
   });
 });
 

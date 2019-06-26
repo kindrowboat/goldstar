@@ -29,7 +29,7 @@ describe('auto assignments', () => {
       const assignments = autoAssignResponse.body;
       assignments.should.be.an('array');
 
-      expected_to_person_id_array = [personB.id, personC.id, personD.id, personE.id, personA.id];
+      expected_to_person_id_array = [personB.id, personA.id, personD.id, personC.id, null];
       assigned_to_person_id_array = assignments.map(assignment => assignment.to_person_id);
       assigned_to_person_id_array.should.deep.equal(expected_to_person_id_array);
     });
