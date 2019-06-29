@@ -1,5 +1,3 @@
-process.env.NODE_ENV = 'test';
-
 require('../spec_helper');
 let chai = require('chai');
 let chaiHttp = require('chai-http');
@@ -106,8 +104,9 @@ describe('Assignments', () => {
 
       const response = await chai.request(app).post('/assignments').send({"due_date_id": dueDate.id, "from_person_id": fromPerson.id, "to_person_id": toPerson.id, "complete": true});
       response.should.have.status(200);
-      response.body.should.be.an('array');
-      response.body.should.deep.equal({"id": newAssignmentId, "due_date_id": dueDate.id, "from_person_id": fromPerson.id, "to_person_id": toPerson.id, "complete": true});
+      response.body.should.be.an('object');
+      newAssignmentId = response.body.id;
+      response.body.should.deep.eq({"id": newAssignmentId, "due_date_id": dueDate.id, "from_person_id": fromPerson.id, "to_person_id": toPerson.id, "complete": true});
 
       const deleteResponse = await chai.request(app).delete(`/assignments/${newAssignmentId}`);
       deleteResponse.should.have.status(204);

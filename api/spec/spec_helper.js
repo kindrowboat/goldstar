@@ -1,7 +1,9 @@
-let app = require('../index');
-let DatabaseCleaner = require('database-cleaner');
-let databaseCleaner = new DatabaseCleaner('mysql');
-let db = require('../app/lib/db');
+process.env.NODE_ENV = 'test';
+require('dotenv').config();
+const app = require('../index');
+const DatabaseCleaner = require('database-cleaner');
+const databaseCleaner = new DatabaseCleaner('mysql');
+const db = require('../app/lib/db');
 
 beforeEach((done) => {
   databaseCleaner.clean(db, done);

@@ -1,5 +1,3 @@
-process.env.NODE_ENV = 'test';
-
 require('../spec_helper');
 let chai = require('chai');
 let chaiHttp = require('chai-http');
