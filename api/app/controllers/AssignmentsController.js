@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../lib/db');
+const combinations = require('../lib/combinations');
 
 router.get('/', (req, res) => {
   db.query('SELECT * FROM assignments', (_error, results, _fields) => {
@@ -84,30 +85,37 @@ function normalizeAssignment(assignment) {
 router.post('/auto_assign', (req, res) => {
   db.query('SELECT * FROM People', (_error, results, _fields) => {
     const people = results;
+    const peopleIds = people.map(person => person.id);
+    const remainingPairs = combinations(peopleIds);
     const assignments = [];
-    // for each people, get a list of remaining people, subtract people already given feedback to
-    let remainingRecipients = people.map(peep => peep.id);
-    const assignmentQueryPromises = [];
-    people.forEach(person => {
-      // get all people they've given feedback to
-      assignmentQueryPromises.push(
-        new Promise(resolve => {
-          db.query('SELECT * FROM People JOIN Assignments ON People.id = Assignments.from_person_id WHERE People.id = ?', [person.id], (_error, results, _feilds) => {
-            const alreadyAssigned = results;
-            // filter out people they've given feedback to from the list of all people
-            const eligiblePeople = remainingRecipients.filter(id => id !== person.id && !alreadyAssigned.includes(id));
-            const assignment = eligiblePeople[0];
-            remainingRecipients = remainingRecipients.filter(id => id != assignment);
-            assignments.push({to_person_id: assignment || null});
-            resolve();
-          });
-        })
-      );
-    });
+    const feedbackPairsPerWeek = Math.floor(people.length / 2);
+    const totalWeeks = feedbackPairsPerWeek * 2 + 1;
+    let skipped = [];
+    for (let i = 0; i < totalWeeks; i++) {
+      const picked = [];
+      for (let j = 0; j < feedbackPairsPerWeek; j++) {
+        let pairIndex;
+        if(skipped.length === 0){
+          pairIndex = remainingPairs.findIndex(candidate => !(picked.includes(candidate[0]) || picked.includes(candidate[1])));
+        } else {
+          pairIndex = remainingPairs.findIndex(candidate => !(picked.includes(candidate[0]) || picked.includes(candidate[1])) && (skipped.includes(candidate[0]) || skipped.includes(candidate[1])));
+          const pair = remainingPairs[pairIndex];
+          skipped = skipped.filter(personId => !pair.includes(personId));
+        }
 
-    Promise.all(assignmentQueryPromises).then(() => {
-      res.status(200).send(assignments);
-    });
+        const pair = remainingPairs[pairIndex];
+
+        if(pair) {
+          assignments.push({from_person_id: pair[0], to_person_id: pair[1]});
+          assignments.push({from_person_id: pair[1], to_person_id: pair[0]});
+          picked.push(pair[0]);
+          picked.push(pair[1]);
+          remainingPairs.splice(pairIndex, 1);
+        }
+      }
+      skipped = peopleIds.filter(personId => (picked.indexOf(personId) === -1));
+    }
+    res.status(200).send(assignments);
   });
 });
 

@@ -12,7 +12,7 @@ chai.use(chaiHttp);
 
 describe('auto assignments', () => {
   let personA, personB, personC, personD, personE, people;
-  const days = 7;
+  const startDate = '2019-06-28';
 
   beforeEach( async ()=> {
     personA = await factories.createPerson({name: 'Person A', initials: 'PA'});
@@ -24,43 +24,58 @@ describe('auto assignments', () => {
   });
   context('when there have never been any assignments', () => {
     it ('assigns each person with a different person', async () => {
-      const autoAssignResponse = await chai.request(app).post('/assignments/auto_assign').send({"days_until_due": days});
+      const autoAssignResponse = await chai.request(app).post('/assignments/auto_assign').send({"start_date": startDate});
       autoAssignResponse.should.have.status(200);
       const assignments = autoAssignResponse.body;
       assignments.should.be.an('array');
 
-      expected_to_person_id_array = [personB.id, personA.id, personD.id, personC.id, null];
-      assigned_to_person_id_array = assignments.map(assignment => assignment.to_person_id);
-      assigned_to_person_id_array.should.deep.equal(expected_to_person_id_array);
+      firstRoundExpectedToPersonIdArray = [
+        [personA.id, personB.id],
+        [personB.id, personA.id],
+        [personC.id, personD.id],
+        [personD.id, personC.id],
+      ];
+      firstRoundAssignedToPersonIdArray = assignments.slice(0,4).map(assignment => [assignment.from_person_id, assignment.to_person_id]);
+      firstRoundAssignedToPersonIdArray.should.deep.equal(firstRoundExpectedToPersonIdArray);
+
+      secondRoundExpectedToPersonIdArray = [
+        [personA.id, personE.id],
+        [personE.id, personA.id],
+        [personB.id, personC.id],
+        [personC.id, personB.id],
+      ];
+      secondRoundAssignedToPersonIdArray = assignments.slice(4,8).map(assignment => [assignment.from_person_id, assignment.to_person_id]);
+      secondRoundAssignedToPersonIdArray.should.deep.equal(secondRoundExpectedToPersonIdArray);
+
+      thirdRoundExpectedToPersonIdArray = [
+        [personA.id, personD.id],
+        [personD.id, personA.id],
+        [personB.id, personE.id],
+        [personE.id, personB.id],
+      ];
+      thirdRoundAssignedToPersonIdArray = assignments.slice(8,12).map(assignment => [assignment.from_person_id, assignment.to_person_id]);
+      thirdRoundAssignedToPersonIdArray.should.deep.equal(thirdRoundExpectedToPersonIdArray);
+
+      forthRoundExpectedToPersonIdArray = [
+        [personA.id, personC.id],
+        [personC.id, personA.id],
+        [personB.id, personD.id],
+        [personD.id, personB.id],
+      ];
+      forthRoundAssignedToPersonIdArray = assignments.slice(12,16).map(assignment => [assignment.from_person_id, assignment.to_person_id]);
+      forthRoundAssignedToPersonIdArray.should.deep.equal(forthRoundExpectedToPersonIdArray);
+
+      fifthRoundExpectedToPersonIdArray = [
+        [personC.id, personE.id],
+        [personE.id, personC.id],
+      ];
+      fifthRoundAssignedToPersonIdArray = assignments.slice(16,20).map(assignment => [assignment.from_person_id, assignment.to_person_id]);
+      fifthRoundAssignedToPersonIdArray.should.deep.equal(fifthRoundExpectedToPersonIdArray);
+
     });
 
-    it('never assign person to themselves', async () => {
+    it('creates assignments for every week needed for everyone to give feedback starting on the "start_date"', async () => {
 
     });
   });
-
-  context('when a person the team', () => {
-    it ('does not assign anyone to that person and that person to anyone', async () => {
-
-    });
-  });
-
-  context('when a new person joins the team', () => {
-    it ('assigns someone to the new person and the new person to someone else', async () => {
-
-    });
-  });
-
-  context('when there have been multiple weeks gone by', () => {
-    it ('always assigns someone who has not given feedback to that person yet', async () => {
-
-    })
-  });
-
-  context('when someone has given feedback to everyone else', () => {
-    it ('does not assign anyone to that person', async() => {
-
-    });
-  });
-
 });
