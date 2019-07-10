@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const db = require('../lib/db');
 const combinations = require('../lib/combinations');
+const dateFormat = require('dateformat');
 
 router.get('/', (req, res) => {
   db.query('SELECT * FROM assignments', (_error, results, _fields) => {
@@ -83,7 +84,7 @@ function normalizeAssignment(assignment) {
 }
 
 router.post('/auto_assign', (req, res) => {
-  db.query('SELECT * FROM People', (_error, results, _fields) => {
+  db.query('SELECT * FROM People', async (_error, results, _fields) => {
     const people = results;
     const peopleIds = people.map(person => person.id);
     const remainingPairs = combinations(peopleIds);
@@ -91,7 +92,20 @@ router.post('/auto_assign', (req, res) => {
     const feedbackPairsPerWeek = Math.floor(people.length / 2);
     const totalWeeks = feedbackPairsPerWeek * 2 + 1;
     let skipped = [];
+    let newDueDateId;
     for (let i = 0; i < totalWeeks; i++) {
+      let currentDate = new Date(req.body.startDate);
+      currentDate.setDate(currentDate.getDate() + 7*i );
+
+      newDueDateId = await new Promise((resolve, reject) => {
+        db.query('INSERT INTO due_dates SET ?', { date: dateFormat(currentDate.date, 'yyyy-mm-dd') }, (error, results) => {
+          if (error) {
+            reject(error);
+          } else {
+            resolve(results.insertId);
+          }
+        });
+      });
       const picked = [];
       for (let j = 0; j < feedbackPairsPerWeek; j++) {
         let pairIndex;
@@ -106,8 +120,8 @@ router.post('/auto_assign', (req, res) => {
         const pair = remainingPairs[pairIndex];
 
         if(pair) {
-          assignments.push({from_person_id: pair[0], to_person_id: pair[1]});
-          assignments.push({from_person_id: pair[1], to_person_id: pair[0]});
+          assignments.push({from_person_id: pair[0], to_person_id: pair[1], due_date_id: newDueDateId});
+          assignments.push({from_person_id: pair[1], to_person_id: pair[0], due_date_id: newDueDateId});
           picked.push(pair[0]);
           picked.push(pair[1]);
           remainingPairs.splice(pairIndex, 1);
@@ -115,7 +129,17 @@ router.post('/auto_assign', (req, res) => {
       }
       skipped = peopleIds.filter(personId => (picked.indexOf(personId) === -1));
     }
-    res.status(200).send(assignments);
+
+    const assignmentMap = assignments.map(assignment => [assignment.from_person_id, assignment.to_person_id, assignment.due_date_id])
+    console.log(assignmentMap);
+    db.query('INSERT INTO assignments (from_person_id, to_person_id, due_date_id) VALUES ?', [assignmentMap], (error, results, fields) => {
+      if (error) {
+        console.log(error);
+        res.send({}, 500);
+      } else {
+        res.status(200).send(assignments);
+      }
+    });
   });
 });
 

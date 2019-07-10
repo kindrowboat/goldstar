@@ -75,7 +75,30 @@ describe('auto assignments', () => {
     });
 
     it('creates assignments for every week needed for everyone to give feedback starting on the "start_date"', async () => {
-
+      const autoAssignResponse = await chai.request(app).post('/assignments/auto_assign').send({"start_date": startDate});
+      autoAssignResponse.should.have.status(200);
+      const assignmentsResponse = await chai.request(app).get('/assignments').send();
+      const expectedAssignments = [
+        { from_person_id: personA.id, to_person_id: personB.id },
+        { from_person_id: personB.id, to_person_id: personA.id },
+        { from_person_id: personC.id, to_person_id: personD.id },
+        { from_person_id: personD.id, to_person_id: personC.id },
+        { from_person_id: personA.id, to_person_id: personE.id },
+        { from_person_id: personE.id, to_person_id: personA.id },
+        { from_person_id: personB.id, to_person_id: personC.id },
+        { from_person_id: personC.id, to_person_id: personB.id },
+        { from_person_id: personA.id, to_person_id: personD.id },
+        { from_person_id: personD.id, to_person_id: personA.id },
+        { from_person_id: personB.id, to_person_id: personE.id },
+        { from_person_id: personE.id, to_person_id: personB.id },
+        { from_person_id: personA.id, to_person_id: personC.id },
+        { from_person_id: personC.id, to_person_id: personA.id },
+        { from_person_id: personB.id, to_person_id: personD.id },
+        { from_person_id: personD.id, to_person_id: personB.id },
+        { from_person_id: personC.id, to_person_id: personE.id },
+        { from_person_id: personE.id, to_person_id: personC.id },
+      ];
+      assignmentsResponse.body.should.equal(expectedAssignments)
     });
   });
 });
