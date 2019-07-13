@@ -131,7 +131,6 @@ router.post('/auto_assign', (req, res) => {
     }
 
     const assignmentMap = assignments.map(assignment => [assignment.from_person_id, assignment.to_person_id, assignment.due_date_id])
-    console.log(assignmentMap);
     db.query('INSERT INTO assignments (from_person_id, to_person_id, due_date_id) VALUES ?', [assignmentMap], (error, results, fields) => {
       if (error) {
         console.log(error);

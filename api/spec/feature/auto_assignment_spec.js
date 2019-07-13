@@ -1,5 +1,3 @@
-process.env.NODE_ENV = 'test';
-
 require('../spec_helper');
 let chai = require('chai');
 let chaiHttp = require('chai-http');
@@ -78,27 +76,32 @@ describe('auto assignments', () => {
       const autoAssignResponse = await chai.request(app).post('/assignments/auto_assign').send({"start_date": startDate});
       autoAssignResponse.should.have.status(200);
       const assignmentsResponse = await chai.request(app).get('/assignments').send();
+      const assignmentsBody = assignmentsResponse.body;
+      const dueDatesResponse = await chai.request(app).get('/due_dates').send();
+      const dueDatesBody = dueDatesResponse.body;
+
       const expectedAssignments = [
-        { from_person_id: personA.id, to_person_id: personB.id },
-        { from_person_id: personB.id, to_person_id: personA.id },
-        { from_person_id: personC.id, to_person_id: personD.id },
-        { from_person_id: personD.id, to_person_id: personC.id },
-        { from_person_id: personA.id, to_person_id: personE.id },
-        { from_person_id: personE.id, to_person_id: personA.id },
-        { from_person_id: personB.id, to_person_id: personC.id },
-        { from_person_id: personC.id, to_person_id: personB.id },
-        { from_person_id: personA.id, to_person_id: personD.id },
-        { from_person_id: personD.id, to_person_id: personA.id },
-        { from_person_id: personB.id, to_person_id: personE.id },
-        { from_person_id: personE.id, to_person_id: personB.id },
-        { from_person_id: personA.id, to_person_id: personC.id },
-        { from_person_id: personC.id, to_person_id: personA.id },
-        { from_person_id: personB.id, to_person_id: personD.id },
-        { from_person_id: personD.id, to_person_id: personB.id },
-        { from_person_id: personC.id, to_person_id: personE.id },
-        { from_person_id: personE.id, to_person_id: personC.id },
+        { id: assignmentsBody[0].id, due_date_id: dueDatesBody[0].id, complete: false, from_person_id: personA.id, to_person_id: personB.id },
+        { id: assignmentsBody[1].id, due_date_id: dueDatesBody[0].id, complete: false, from_person_id: personB.id, to_person_id: personA.id },
+        { id: assignmentsBody[2].id, due_date_id: dueDatesBody[0].id, complete: false, from_person_id: personC.id, to_person_id: personD.id },
+        { id: assignmentsBody[3].id, due_date_id: dueDatesBody[0].id, complete: false, from_person_id: personD.id, to_person_id: personC.id },
+        { id: assignmentsBody[4].id, due_date_id: dueDatesBody[1].id, complete: false, from_person_id: personA.id, to_person_id: personE.id },
+        { id: assignmentsBody[5].id, due_date_id: dueDatesBody[1].id, complete: false, from_person_id: personE.id, to_person_id: personA.id },
+        { id: assignmentsBody[6].id, due_date_id: dueDatesBody[1].id, complete: false, from_person_id: personB.id, to_person_id: personC.id },
+        { id: assignmentsBody[7].id, due_date_id: dueDatesBody[1].id, complete: false, from_person_id: personC.id, to_person_id: personB.id },
+        { id: assignmentsBody[8].id, due_date_id: dueDatesBody[2].id, complete: false, from_person_id: personA.id, to_person_id: personD.id },
+        { id: assignmentsBody[9].id, due_date_id: dueDatesBody[2].id, complete: false, from_person_id: personD.id, to_person_id: personA.id },
+        { id: assignmentsBody[10].id, due_date_id: dueDatesBody[2].id, complete: false, from_person_id: personB.id, to_person_id: personE.id },
+        { id: assignmentsBody[11].id, due_date_id: dueDatesBody[2].id, complete: false, from_person_id: personE.id, to_person_id: personB.id },
+        { id: assignmentsBody[12].id, due_date_id: dueDatesBody[3].id, complete: false, from_person_id: personA.id, to_person_id: personC.id },
+        { id: assignmentsBody[13].id, due_date_id: dueDatesBody[3].id, complete: false, from_person_id: personC.id, to_person_id: personA.id },
+        { id: assignmentsBody[14].id, due_date_id: dueDatesBody[3].id, complete: false, from_person_id: personB.id, to_person_id: personD.id },
+        { id: assignmentsBody[15].id, due_date_id: dueDatesBody[3].id, complete: false, from_person_id: personD.id, to_person_id: personB.id },
+        { id: assignmentsBody[16].id, due_date_id: dueDatesBody[4].id, complete: false, from_person_id: personC.id, to_person_id: personE.id },
+        { id: assignmentsBody[17].id, due_date_id: dueDatesBody[4].id, complete: false, from_person_id: personE.id, to_person_id: personC.id },
       ];
-      assignmentsResponse.body.should.equal(expectedAssignments)
+
+      assignmentsResponse.body.should.deep.equal(expectedAssignments)
     });
   });
 });
