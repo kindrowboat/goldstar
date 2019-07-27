@@ -1,27 +1,46 @@
 //@flow
-import React from 'react';
+import React, { useState } from 'react';
 import logo from './logo.svg';
 import './App.css';
+import axios from 'axios';
+
 
 function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+  const [state, setState] = useState({people: null});
+  const { people } = state;
+
+  if(people == null) {
+    axios.get('/people')
+      .then((response) => setState({people: response.data}));
+  }
+
+
+  if(people) {
+    return (
+      <div className="App">
+        <div data-testid="chart">
+          <table>
+            <thead>
+            <tr>
+              <td/>
+              <td>01/01/2019</td>
+            </tr>
+            </thead>
+            <tbody>
+            {people && people.map((person) => (
+              <tr key={person.id}>
+                <td>{person.name}</td>
+                <td>TDKW</td>
+              </tr>
+            ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    );
+  } else {
+    return <div>no people yet</div>
+  }
 }
 
 export default App;
