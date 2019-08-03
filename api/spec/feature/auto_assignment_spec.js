@@ -3,6 +3,7 @@ let chai = require('chai');
 let chaiHttp = require('chai-http');
 let app = require('../../index');
 const factories = require('../support/factories');
+const dateFormat = require('dateformat');
 
 chai.should();
 
@@ -55,17 +56,19 @@ describe('auto assignments', () => {
       thirdRoundAssignedToPersonIdArray.should.deep.equal(thirdRoundExpectedToPersonIdArray);
 
       forthRoundExpectedToPersonIdArray = [
-        [personA.id, personC.id],
-        [personC.id, personA.id],
         [personB.id, personD.id],
+        [personC.id, personE.id],
         [personD.id, personB.id],
+        [personE.id, personC.id],
       ];
       forthRoundAssignedToPersonIdArray = assignments.slice(12,16).map(assignment => [assignment.from_person_id, assignment.to_person_id]);
       forthRoundAssignedToPersonIdArray.should.deep.equal(forthRoundExpectedToPersonIdArray);
 
       fifthRoundExpectedToPersonIdArray = [
-        [personC.id, personE.id],
-        [personE.id, personC.id],
+        [personA.id, personC.id],
+        [personC.id, personA.id],
+        [personD.id, personE.id],
+        [personE.id, personD.id],
       ];
       fifthRoundAssignedToPersonIdArray = assignments.slice(16,20).map(assignment => [assignment.from_person_id, assignment.to_person_id]);
       fifthRoundAssignedToPersonIdArray.should.deep.equal(fifthRoundExpectedToPersonIdArray);
@@ -80,6 +83,12 @@ describe('auto assignments', () => {
       const dueDatesResponse = await chai.request(app).get('/due_dates').send();
       const dueDatesBody = dueDatesResponse.body;
 
+      dueDatesBody[0].date.should.equal('2019-06-28');
+      dueDatesBody[1].date.should.equal('2019-07-05');
+      dueDatesBody[2].date.should.equal('2019-07-12');
+      dueDatesBody[3].date.should.equal('2019-07-19');
+      dueDatesBody[4].date.should.equal('2019-07-26');
+
       const expectedAssignments = [
         { id: assignmentsBody[0].id, due_date_id: dueDatesBody[0].id, complete: false, from_person_id: personA.id, to_person_id: personB.id },
         { id: assignmentsBody[1].id, due_date_id: dueDatesBody[0].id, complete: false, from_person_id: personB.id, to_person_id: personA.id },
@@ -93,12 +102,14 @@ describe('auto assignments', () => {
         { id: assignmentsBody[9].id, due_date_id: dueDatesBody[2].id, complete: false, from_person_id: personD.id, to_person_id: personA.id },
         { id: assignmentsBody[10].id, due_date_id: dueDatesBody[2].id, complete: false, from_person_id: personB.id, to_person_id: personE.id },
         { id: assignmentsBody[11].id, due_date_id: dueDatesBody[2].id, complete: false, from_person_id: personE.id, to_person_id: personB.id },
-        { id: assignmentsBody[12].id, due_date_id: dueDatesBody[3].id, complete: false, from_person_id: personA.id, to_person_id: personC.id },
-        { id: assignmentsBody[13].id, due_date_id: dueDatesBody[3].id, complete: false, from_person_id: personC.id, to_person_id: personA.id },
-        { id: assignmentsBody[14].id, due_date_id: dueDatesBody[3].id, complete: false, from_person_id: personB.id, to_person_id: personD.id },
-        { id: assignmentsBody[15].id, due_date_id: dueDatesBody[3].id, complete: false, from_person_id: personD.id, to_person_id: personB.id },
-        { id: assignmentsBody[16].id, due_date_id: dueDatesBody[4].id, complete: false, from_person_id: personC.id, to_person_id: personE.id },
-        { id: assignmentsBody[17].id, due_date_id: dueDatesBody[4].id, complete: false, from_person_id: personE.id, to_person_id: personC.id },
+        { id: assignmentsBody[12].id, due_date_id: dueDatesBody[3].id, complete: false, from_person_id: personB.id, to_person_id: personD.id },
+        { id: assignmentsBody[13].id, due_date_id: dueDatesBody[3].id, complete: false, from_person_id: personC.id, to_person_id: personE.id },
+        { id: assignmentsBody[14].id, due_date_id: dueDatesBody[3].id, complete: false, from_person_id: personD.id, to_person_id: personB.id },
+        { id: assignmentsBody[15].id, due_date_id: dueDatesBody[3].id, complete: false, from_person_id: personE.id, to_person_id: personC.id },
+        { id: assignmentsBody[16].id, due_date_id: dueDatesBody[4].id, complete: false, from_person_id: personA.id, to_person_id: personC.id },
+        { id: assignmentsBody[17].id, due_date_id: dueDatesBody[4].id, complete: false, from_person_id: personC.id, to_person_id: personA.id },
+        { id: assignmentsBody[18].id, due_date_id: dueDatesBody[4].id, complete: false, from_person_id: personD.id, to_person_id: personE.id },
+        { id: assignmentsBody[19].id, due_date_id: dueDatesBody[4].id, complete: false, from_person_id: personE.id, to_person_id: personD.id },
       ];
 
       assignmentsResponse.body.should.deep.equal(expectedAssignments)

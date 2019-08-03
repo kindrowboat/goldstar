@@ -90,15 +90,15 @@ router.post('/auto_assign', (req, res) => {
     const remainingPairs = combinations(peopleIds);
     const assignments = [];
     const feedbackPairsPerWeek = Math.floor(people.length / 2);
-    const totalWeeks = feedbackPairsPerWeek * 2 + 1;
+    const totalWeeks = (people.length - 1) + (people.length % 2);
     let skipped = [];
     let newDueDateId;
     for (let i = 0; i < totalWeeks; i++) {
-      let currentDate = new Date(req.body.startDate);
+      let currentDate = new Date(req.body.start_date);
       currentDate.setDate(currentDate.getDate() + 7*i );
 
       newDueDateId = await new Promise((resolve, reject) => {
-        db.query('INSERT INTO due_dates SET ?', { date: dateFormat(currentDate.date, 'yyyy-mm-dd') }, (error, results) => {
+        db.query('INSERT INTO due_dates SET ?', { date: dateFormat(currentDate, 'yyyy-mm-dd', true) }, (error, results) => {
           if (error) {
             reject(error);
           } else {
